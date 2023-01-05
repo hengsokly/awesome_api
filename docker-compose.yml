@@ -1,0 +1,32 @@
+version: '3'
+
+volumes:
+  db:
+  bundle:
+
+services:
+  db:
+    image: postgres:14.4
+    volumes:
+      - 'db:/var/lib/postgresql/data'
+    environment:
+      - POSTGRES_HOST_AUTH_METHOD=trust
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    volumes:
+      - .:/app
+      - bundle:/usr/local/bundle
+    command:  bash -c "rm -f tmp/pids/server.pid && bundle exec rails s -p 3000 -b '0.0.0.0'"
+    env_file: app.env
+    depends_on:
+      - db
+      - redis
+    stdin_open: true
+    tty: true
+
+  redis:
+    image: redis:5.0.6
